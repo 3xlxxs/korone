@@ -1,6 +1,10 @@
-import asyncio, aiohttp, json, os, urllib.parse
-from datetime import datetime
-from dotenv import load_dotenv
+import os
+try:
+    import asyncio, aiohttp, json, urllib.parse
+    from datetime import datetime
+    from dotenv import load_dotenv
+except:
+    os.system('pip install aiohttp python-dotenv')
 
 load_dotenv()
 
@@ -117,5 +121,5 @@ if __name__ == "__main__":
     if not CFG["cookie"] or not CFG["webhook"]:
         print("❌ Set PUPPYSECURITY_COOKIE and DISCORD_WEBHOOK in .env")
         exit(1)
-        
+
     asyncio.run(run())
