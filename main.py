@@ -8,9 +8,17 @@ import logging
 from datetime import datetime
 from typing import Optional
 
+# ─── aiogram 3.7+ imports ───────────────────────────────────────
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.filters import Command, CommandStart
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.exceptions import TelegramRetryAfter, TelegramAPIError
+
 # ─── Logging setup ──────────────────────────────────────────────
 class SymbolFormatter(logging.Formatter):
-    """Кастомный форматтер: [HH:MM:SS] [SYMBOL] message"""
+    """Формат: [HH:MM:SS] [SYMBOL] message"""
     SYMBOLS = {
         logging.INFO: "ℹ",
         logging.DEBUG: "•",
@@ -24,24 +32,12 @@ class SymbolFormatter(logging.Formatter):
         record.time = datetime.now().strftime("%H:%M:%S")
         return f"[{record.time}] [{record.symbol}] {record.getMessage()}"
 
-# Настройка корневого логгера
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(SymbolFormatter())
 root_logger.addHandler(handler)
-log = root_logger.info  # алиас для удобства
-
-# ─── Dependencies fallback ──────────────────────────────────────
-try:
-    from aiogram import Bot, Dispatcher, types, F
-    from aiogram.filters import Command, CommandStart
-    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-    from aiogram.exceptions import TelegramRetryAfter, TelegramAPIError
-except ImportError:
-    os.system('pip install "aiogram>=3.10.0" "aiohttp>=3.9.0" "python-dotenv>=1.0.0"')
-    log("📦 Зависимости установлены, перезапустите бота")
-    sys.exit(0)
+log = root_logger.info
 
 # ─── Config ─────────────────────────────────────────────────────
 CFG = {
@@ -219,14 +215,12 @@ async def notify(item: dict, thumb: Optional[str] = None) -> tuple[int, int]:
                     photo=thumb,
                     caption=f"<b>{name}</b>",
                     reply_markup=kb,
-                    parse_mode="HTML"
                 )
             else:
                 await bot.send_message(
                     chat_id=uid,
                     text=f"<b>{name}</b>",
                     reply_markup=kb,
-                    parse_mode="HTML"
                 )
             sent += 1
             await asyncio.sleep(0.05)
@@ -301,7 +295,11 @@ async def main() -> None:
         logging.critical("❌ Укажите TELEGRAM_BOT_TOKEN в переменных окружения")
         return
     
-    bot = Bot(token=CFG["token"], parse_mode="HTML")
+    # ✅ aiogram 3.7+: используем DefaultBotProperties вместо parse_mode в Bot()
+    bot = Bot(
+        token=CFG["token"],
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    )
     
     # Запуск скрапера как фоновой задачи
     scraper_task = asyncio.create_task(scraper_loop(), name="scraper")
@@ -323,7 +321,6 @@ async def main() -> None:
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    # Для Windows: корректная обработка сигналов
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     
