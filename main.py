@@ -1,8 +1,12 @@
-import os, json, asyncio, aiohttp, urllib.parse
-from datetime import datetime
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import os
+try:
+    import json, asyncio, aiohttp, urllib.parse
+    from datetime import datetime
+    from aiogram import Bot, Dispatcher, types
+    from aiogram.filters import Command
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+except:
+    os.system('pip install "aiogram>=3.0.0" "aiohttp>=3.9.0" "python-dotenv>=1.0.0"')
 
 # ─── Config ─────────────────────────────────────────────────────
 CFG = {
