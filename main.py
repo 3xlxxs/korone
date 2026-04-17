@@ -160,9 +160,15 @@ async def scraper_loop():
 
 # ─── Main ───────────────────────────────────────────────────────
 async def main():
-    if not CFG["token"]: print("❌ Set TELEGRAM_BOT_TOKEN"); return
-    dp.start_polling(bot)
-    await scraper_loop()
+    if not CFG["token"]:
+        print("❌ Set TELEGRAM_BOT_TOKEN")
+        return
+
+    # Запускаем скрапер как фоновую задачу (не блокирует цикл событий)
+    asyncio.create_task(scraper_loop())
+
+    # Запускаем бота (блокирует выполнение до Ctrl+C / SIGTERM)
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
